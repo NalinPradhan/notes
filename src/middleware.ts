@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Remove the unused 'request' parameter or prefix it with underscore
-export function middleware(_request: NextRequest) {
-  // Add CORS headers
-  const response = NextResponse.next();
+// Use the request parameter for middleware functionality
+export function middleware(request: NextRequest) {
+  // Handle OPTIONS requests directly
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,DELETE,PATCH,POST,PUT,OPTIONS",
+        "Access-Control-Allow-Headers":
+          "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
+      },
+    });
+  }
 
-  // Set CORS headers
-  response.headers.set("Access-Control-Allow-Credentials", "true");
+  // For other requests, add CORS headers
+  const response = NextResponse.next();
   response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set(
     "Access-Control-Allow-Methods",
@@ -19,23 +30,6 @@ export function middleware(_request: NextRequest) {
   );
 
   return response;
-}
-
-// Handle OPTIONS method
-export function handleOptions(request: NextRequest) {
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Allow-Origin": "*", // In production, specify your domains
-        "Access-Control-Allow-Methods": "GET,DELETE,PATCH,POST,PUT",
-        "Access-Control-Allow-Headers":
-          "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization",
-      },
-    });
-  }
-  return NextResponse.next();
 }
 
 export const config = {

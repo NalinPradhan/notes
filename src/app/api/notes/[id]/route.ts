@@ -4,6 +4,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 // Helper function to check if a note belongs to the tenant
 async function getNoteWithTenantCheck(id: string, tenantId: string) {
+  if (!supabaseAdmin) {
+    return null;
+  }
   const { data: note, error } = await supabaseAdmin
     .from("Note")
     .select("*")
@@ -71,6 +74,13 @@ export const PUT = withAuth(async (req: NextRequest, user: AuthUser) => {
     if (title) updates.title = title;
     if (content) updates.content = content;
 
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: "Supabase client not initialized" },
+        { status: 500 }
+      );
+    }
+
     const { data: updatedNote, error } = await supabaseAdmin
       .from("Note")
       .update(updates)
@@ -106,7 +116,14 @@ export const DELETE = withAuth(async (req: NextRequest, user: AuthUser) => {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    const { error } = await supabaseAdmin.from("Note").delete().eq("id", id);
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: "Supabase client not initialized" },
+        { status: 500 }
+      );
+    }
+
+    const { error } = await supabaseAdmin.from("Note").eq("id", id).delete();
 
     if (error) {
       throw error;
