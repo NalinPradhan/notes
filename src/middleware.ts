@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+// Remove the unused 'request' parameter or prefix it with underscore
+export function middleware(_request: NextRequest) {
   // Add CORS headers
   const response = NextResponse.next();
 
   // Set CORS headers
   response.headers.set("Access-Control-Allow-Credentials", "true");
-  response.headers.set("Access-Control-Allow-Origin", "*"); // In production, specify your domains
+  response.headers.set("Access-Control-Allow-Origin", "*");
   response.headers.set(
     "Access-Control-Allow-Methods",
-    "GET,DELETE,PATCH,POST,PUT"
+    "GET,DELETE,PATCH,POST,PUT,OPTIONS"
   );
   response.headers.set(
     "Access-Control-Allow-Headers",

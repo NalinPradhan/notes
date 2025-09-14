@@ -62,7 +62,12 @@ export const PUT = withAuth(async (req: NextRequest, user: AuthUser) => {
       );
     }
 
-    const updates: any = {};
+    interface NoteUpdates {
+      title?: string;
+      content?: string;
+    }
+
+    const updates: NoteUpdates = {};
     if (title) updates.title = title;
     if (content) updates.content = content;
 
