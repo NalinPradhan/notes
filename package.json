@@ -13,7 +13,9 @@
     "test:db": "tsx scripts/test-db-connection.ts",
     "test:supabase": "tsx scripts/test-supabase-connection.ts",
     "check:env": "tsx scripts/check-env.ts",
-    "debug:login": "NODE_OPTIONS='--inspect' next dev --turbopack",
+    "setup:vercel": "tsx scripts/vercel-env-setup.ts",
+    "debug:login": "cross-env DEBUG_SUPABASE=true next dev --turbopack",
+    "build:debug": "cross-env DEBUG_SUPABASE=true next build --turbopack",
     "postinstall": "prisma generate"
   },
   "dependencies": {

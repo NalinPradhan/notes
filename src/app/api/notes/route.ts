@@ -3,6 +3,12 @@ import { withAuth, AuthUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
+// Create a timeout promise for database operations
+const createTimeout = (ms: number, message: string) =>
+  new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(message)), ms);
+  });
+
 // GET /api/notes - Get all notes for the current tenant
 async function getNotes(req: NextRequest, user: AuthUser) {
   try {

@@ -130,20 +130,79 @@ Solutions:
 
 ### Deploying to Vercel
 
-1. Create a Vercel project
-2. Link it to your repository
-3. Add the following environment variables:
+1. Install Vercel CLI if you haven't already:
+
+   ```bash
+   npm install -g vercel
+   ```
+
+2. Run the Vercel environment setup helper:
+
+   ```bash
+   npm run setup:vercel
+   ```
+
+3. Follow the instructions to set your environment variables in Vercel:
+
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_KEY`
    - `JWT_SECRET`
-4. Deploy the project
+
+4. Link your local project to Vercel:
+
+   ```bash
+   vercel link
+   ```
+
+5. Set your environment variables on Vercel:
+
+   ```bash
+   vercel env add NEXT_PUBLIC_SUPABASE_URL
+   vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+   vercel env add SUPABASE_SERVICE_KEY
+   vercel env add JWT_SECRET
+   ```
+
+6. Deploy your project:
+   ```bash
+   vercel --prod
+   ```
 
 ### Important Notes for Vercel Deployment
 
 - Make sure all environment variables are added in the Vercel project settings
 - Consider using Vercel's encrypted environment variables for sensitive keys
 - If you update environment variables, you may need to redeploy your project
+- When troubleshooting, check the Vercel deployment logs for error messages
+- The Supabase timeout issue typically indicates environment variable problems
+
+### Debugging Deployment Issues
+
+If you encounter timeouts or authentication issues:
+
+1. Verify your environment variables are set:
+
+   ```bash
+   vercel env ls
+   ```
+
+2. Try enabling debug logging in your deployment:
+
+   ```bash
+   vercel env add DEBUG_SUPABASE true
+   ```
+
+3. Redeploy with debug logging:
+
+   ```bash
+   vercel --prod
+   ```
+
+4. Check the logs for more detailed error information:
+   ```bash
+   vercel logs
+   ```
 
 ## Test Accounts
 
