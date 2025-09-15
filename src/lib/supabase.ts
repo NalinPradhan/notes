@@ -8,47 +8,88 @@ if (typeof window === "undefined") {
 
 /**
  * This is a special implementation to handle Supabase client creation
- * that won't fail during build time when environment variables aren't available.
+ * that properly supports build time vs runtime environment.
  */
 
-// Simple helper function to create a client or return a dummy during build
-const createSafeClient = (url?: string, key?: string) => {
-  // During Next.js static build, return a dummy that won't be used
-  if (process.env.NODE_ENV === "production" && (!url || !key)) {
-    // The code below uses dynamic properties to avoid TypeScript errors
-    // while providing something that won't throw errors during build
-    return {
-      from: () => ({
-        select: () => ({ data: null, error: null }),
-        insert: () => ({ data: null, error: null }),
-        update: () => ({ data: null, error: null }),
-        delete: () => ({ data: null, error: null }),
-      }),
+// Create a more comprehensive dummy client for build-time use
+const createDummyClient = () => {
+  // Create a chainable API that matches Supabase's structure
+  const createChainable = (
+    returns: Record<string, unknown> = { data: null, error: null }
+  ) => {
+    // Define handler with appropriate types
+    const handler: ProxyHandler<Record<string, unknown>> = {
+      get: (target: Record<string, unknown>, prop: string | symbol) => {
+        // If the property exists on the target and is a string key
+        if (typeof prop === "string" && prop in target) {
+          return target[prop];
+        }
+
+        // Otherwise return a function that returns a new proxy
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        return (_: unknown) => new Proxy({}, handler);
+      },
     };
-  }
 
-  // For normal runtime, create a real client
-  if (url && key) {
-    return createClient(url, key);
-  }
+    return new Proxy(returns, handler);
+  };
 
-  // This should only happen during development if env vars are missing
-  console.error("Missing Supabase credentials. Check your .env file.");
-  return null;
+  // Return a dummy client with all the methods we need
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    from: (_tableName: string) => createChainable(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    rpc: (_functionName: string, _params?: Record<string, unknown>) =>
+      createChainable(),
+    auth: createChainable({
+      signIn: () => createChainable(),
+      signOut: () => createChainable(),
+      onAuthStateChange: () => ({ data: null, error: null }),
+    }),
+    storage: createChainable(),
+    // Add other Supabase methods as needed
+  };
 };
 
-// Create clients with safe fallbacks
-// TypeScript ignore is used to prevent type errors from our build-time workaround
-// @ts-expect-error - This is intentional to prevent build errors
+// Determine if we're in build time
+const isBuildTimeEnvironment =
+  typeof window === "undefined" &&
+  (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+// Create a real or dummy client based on environment
+const createSafeClient = (url?: string, key?: string) => {
+  // During build time or missing credentials, use the dummy client
+  if (isBuildTimeEnvironment || !url || !key) {
+    // Only log during build, not in production runtime
+    if (process.env.NODE_ENV !== "production" || isBuildTimeEnvironment) {
+      console.log(
+        "Using dummy Supabase client (missing credentials or build time)"
+      );
+    }
+    return createDummyClient();
+  }
+
+  // For normal runtime with credentials, create a real client
+  try {
+    return createClient(url, key);
+  } catch (error) {
+    console.error("Error initializing Supabase client:", error);
+    return createDummyClient();
+  }
+};
+
+// Create clients with improved error handling
 export const supabase = createSafeClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-// @ts-expect-error - This is intentional to prevent build errors
-export const supabaseAdmin = process.env.SUPABASE_SERVICE_KEY
-  ? createSafeClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY
-    )
-  : supabase;
+// Create admin client with improved error handling
+export const supabaseAdmin =
+  process.env.SUPABASE_SERVICE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? createSafeClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_KEY
+      )
+    : supabase;

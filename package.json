@@ -10,6 +10,10 @@
     "seed": "tsx scripts/seed.ts",
     "setup:supabase": "tsx scripts/setup-supabase-schema.ts",
     "seed:supabase": "tsx scripts/seed-supabase.ts",
+    "test:db": "tsx scripts/test-db-connection.ts",
+    "test:supabase": "tsx scripts/test-supabase-connection.ts",
+    "check:env": "tsx scripts/check-env.ts",
+    "debug:login": "NODE_OPTIONS='--inspect' next dev --turbopack",
     "postinstall": "prisma generate"
   },
   "dependencies": {
